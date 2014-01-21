@@ -1,0 +1,47 @@
+Installer Java JDK 7u45
+-----------------------
+Version 64 Bit : http://download.oracle.com/otn-pub/java/jdk/7u45-b18/jdk-7u45-windows-x64.exe
+Version 32 Bit : http://download.oracle.com/otn-pub/java/jdk/7u45-b18/jdk-7u45-windows-i586.exe
+
+Installer la version correspondant à la machine (par exemple dans c:\projet\orion).
+
+
+Télécharger Play Framework 2.2.1
+--------------------------------
+http://downloads.typesafe.com/play/2.2.1/play-2.2.1.zip
+
+Décompresser dans un répertoire (par exemple c:\projets\orion)
+
+
+Télécharger Eclipse Kepler
+--------------------------
+Version 64 Bit : http://eclipse.ialto.com/technology/epp/downloads/release/kepler/SR1/eclipse-jee-kepler-SR1-win32-x86_64.zip
+Version 32 Bit : http://eclipse.ialto.com/technology/epp/downloads/release/kepler/SR1/eclipse-jee-kepler-SR1-win32.zip
+
+Installer la version correspondant à la machine (par exemple dans c:\projet\orion)
+
+
+Installer subclipse 1.10.3
+--------------------------
+http://subclipse.tigris.org/files/documents/906/49339/site-1.10.3.zip
+
+
+Eclipse : Configurer UTF-8 pour le workspace
+--------------------------------------------
+Windows > Preferences > General > Workspaces, positionner "Text file encoding" sur "Other : UTF-8".
+Windows > Preferences > General > Editors > Text Editors > Spelling, positionner "encoding" sur "Other : UTF-8".
+
+Eclipse : Configurer le JDK
+---------------------------
+Windows > Preferences > Java > Installed JREs, ajouter le JDK 7 et le sélectionner par défaut.
+Windows > Preferences > Java > Compiler, positionner "Compiler compliance level' sur "1.7".
+
+Eclipse : Préparer le projet eclipse
+------------------------------------
+Aller à la racine du projet.
+Ouvrir un invite DOS.
+Paramétrer convenablement project_env.bat.
+Lancer project_env.bat.
+Faire : play eclipse.
+Rafraichir le projet eclipse
+Build path > Configure build Path > Libraries > Add class folder, ajouter collat/target/scala-2.10/classes
