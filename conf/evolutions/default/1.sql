@@ -4,45 +4,39 @@
 # --- !Ups
 
 create table distance (
-  id                        bigint auto_increment not null,
+  id                        integer primary key AUTOINCREMENT,
   origin                    varchar(255),
   destination               varchar(255),
   distance                  double,
   duration                  double,
   lon                       double,
   lat                       double,
-  is_allowed                boolean,
-  constraint pk_distance primary key (id))
+  is_allowed                integer(1))
 ;
 
 create table last_call (
-  date                      timestamp not null,
-  constraint pk_last_call primary key (date))
+  date                      timestamp primary key)
 ;
 
 create table small_ads (
   url                       varchar(255),
-  distance_id               bigint)
+  distance_id               integer)
 ;
 
-create sequence last_call_seq;
-
-alter table small_ads add constraint fk_small_ads_distance_1 foreign key (distance_id) references distance (id) on delete restrict on update restrict;
+alter table small_ads add constraint fk_small_ads_distance_1 foreign key (distance_id) references distance (id);
 create index ix_small_ads_distance_1 on small_ads (distance_id);
 
 
 
 # --- !Downs
 
-SET REFERENTIAL_INTEGRITY FALSE;
+PRAGMA foreign_keys = OFF;
 
-drop table if exists distance;
+drop table distance;
 
-drop table if exists last_call;
+drop table last_call;
 
-drop table if exists small_ads;
+drop table small_ads;
 
-SET REFERENTIAL_INTEGRITY TRUE;
-
-drop sequence if exists last_call_seq;
+PRAGMA foreign_keys = ON;
 
