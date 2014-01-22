@@ -15,3 +15,4 @@ dist
 /.settings
 /bin
 /.target
+/project_env.bat

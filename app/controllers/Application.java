@@ -1,13 +1,11 @@
 package controllers;
 
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.net.URL;
-import java.net.URLConnection;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Date;
+import java.util.List;
 
 import models.Distance;
+import models.LastCall;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -16,7 +14,7 @@ import org.jsoup.select.Elements;
 
 import play.mvc.Controller;
 import play.mvc.Result;
-import views.html.*;
+import views.html.index;
 public class Application extends Controller {
 
 	public static Result index() {
@@ -26,6 +24,20 @@ public class Application extends Controller {
 
 		String url = urlRoot + "/" + dpt + "/?" + type;
 
+//		List<LastCall> lastCalls = LastCall.find.all();
+//		LastCall lastCall;
+//		if(lastCalls.isEmpty()) {
+//			lastCall = new LastCall();
+//			lastCall.setDate(new Date());
+//			lastCall.save();
+//		} else {
+//			lastCall = lastCalls.get(0);
+//		}
+//		
+//		Date now = new Date();
+//		
+//		if(now.equals(lastCall.getDate()))
+		
 		try {
 			Document doc = Jsoup.parse(new URL(url).openStream(), "iso-8859-15", url);
 			Elements list = doc.getElementsByClass("list-lbc");
@@ -34,10 +46,13 @@ public class Application extends Controller {
 			
 			for(Element link : allLinks) {
 				Element date = link.child(0).child(0).child(0);
-				System.out.println(date.text().trim());
 				if(date.text().trim().equalsIgnoreCase("Hier")) {
 					String location = link.child(0).child(2).child(2).text().trim().replaceAll("[ \t\r\n]", "").replaceAll("/", ", ");
 					System.out.println(location);
+					List<Distance> distances = Distance.find.where().ieq("destination", location).findList();
+					if(distances.isEmpty()) {
+						
+					}
 				}
 			}
 			
