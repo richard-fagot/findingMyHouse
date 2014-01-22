@@ -1,67 +1,81 @@
 package controllers;
 
-import java.net.URL;
-import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import models.Distance;
-import models.LastCall;
-
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-
+import models.SmallAds;
+import play.libs.Json;
+import play.mvc.BodyParser;
 import play.mvc.Controller;
 import play.mvc.Result;
+import reader.LbcReader;
 import views.html.index;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
 public class Application extends Controller {
-
+	private static boolean hasRetrieved = false;
+	
 	public static Result index() {
-		String urlRoot = "http://www.leboncoin.fr/ventes_immobilieres/offres/midi_pyrenees";
-		String dpt = "gers";
-		String type = "ret=3";
-
-		String url = urlRoot + "/" + dpt + "/?" + type;
-
-//		List<LastCall> lastCalls = LastCall.find.all();
-//		LastCall lastCall;
-//		if(lastCalls.isEmpty()) {
-//			lastCall = new LastCall();
-//			lastCall.setDate(new Date());
-//			lastCall.save();
-//		} else {
-//			lastCall = lastCalls.get(0);
-//		}
-//		
-//		Date now = new Date();
-//		
-//		if(now.equals(lastCall.getDate()))
-		
-		try {
-			Document doc = Jsoup.parse(new URL(url).openStream(), "iso-8859-15", url);
-			Elements list = doc.getElementsByClass("list-lbc");
-			Element list_lbc = list.get(0);
-			Elements allLinks = list_lbc.getElementsByTag("a");
-			
-			for(Element link : allLinks) {
-				Element date = link.child(0).child(0).child(0);
-				if(date.text().trim().equalsIgnoreCase("Hier")) {
-					String location = link.child(0).child(2).child(2).text().trim().replaceAll("[ \t\r\n]", "").replaceAll("/", ", ");
-					System.out.println(location);
-					List<Distance> distances = Distance.find.where().ieq("destination", location).findList();
-					if(distances.isEmpty()) {
-						
-					}
-				}
-			}
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		
 		return ok(index.render());
 	}
 
+	public static Result getElligibleAds() {
+		return ok(Json.toJson(retrieveElligibleAds()));
+	}
+
+	public static Result getUnknownDest() {
+		List<SmallAds> all = retrieveElligibleAds();
+		Set<String> unknownDest = new HashSet<String>();
+		
+		for(SmallAds ads : all) {
+			Distance distance = ads.getDistance();
+			if(distance.getDuration() == null) {
+				String destination = distance.getDestination();
+				unknownDest.add(destination);
+			}
+		}
+		
+		return ok(Json.toJson(unknownDest));
+	}
+	
+	@BodyParser.Of(BodyParser.Json.class)
+	public static Result saveDistance() {
+		JsonNode json = request().body().asJson();
+		
+		return ok();
+	}
+	
+	private static List<SmallAds> retrieveElligibleAds() {
+		if(!hasRetrieved) {
+			String dpt = "gers";
+			
+			LbcReader reader = new LbcReader(dpt);
+			List<SmallAds> adsList = reader.getAds();
+			
+			for(SmallAds ads : adsList) {
+				Distance distance = ads.getDistance();
+				String location = distance.getDestination();
+				Distance existingDistance = Distance.find.where().ieq("destination", location).findUnique();
+				if(existingDistance != null) {
+					if(existingDistance.isAllowed()) {
+						ads.setDistance(existingDistance);
+					} else {
+						continue;
+					}
+				} else {
+					distance.save();
+				}
+				
+				ads.save();
+				
+				System.out.println(location);
+			}
+			hasRetrieved = true;
+		}
+		
+		return SmallAds.find.all();
+	}
 }

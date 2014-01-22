@@ -7,34 +7,104 @@
       body { height: 100%; margin: 0; padding: 0 }
       #map-canvas { height: 600px; width: 600px; }
     </style>
-    <script type="text/javascript"
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC3mhgXnJnOiDZMrT_xjDwuM96voi97b3A&sensor=false">
-    </script>
-    <script type="text/javascript">
-    /* function initialize() {
-		var geocoder = new google.maps.Geocoder();
-		geocoder.geocode( { 'address': 'Toulouse, France'}, function(results, status) {
-			if (status == google.maps.GeocoderStatus.OK) {
-				displayMap(results[0].geometry.location);
-			} else {
-				alert('Geocode was not successful for the following reason: ' + status);
-			}
-		});
-    }
-	  
-	function displayMap(centerOfMap) {
-		var mapOptions = {
-          center: centerOfMap,
-          zoom: 8
-        };
-        var map = new google.maps.Map(document.getElementById("map-canvas"),
-            mapOptions);
-	}
-	
-      google.maps.event.addDomListener(window, 'load', initialize); */
-    </script>
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC3mhgXnJnOiDZMrT_xjDwuM96voi97b3A&sensor=false"></script>
+    <script src="@routes.Assets.at("javascripts/jquery-1.9.0.min.js")" type="text/javascript"></script>
   </head>
+  
   <body>
     <div id="map-canvas"/>
+    <div id="content"/>
+    
+    
+   
+<script type="text/javascript">
+$(document).ready(function(){
+	var destStr = '[]';
+	var dest = JSON.parse(destStr);
+	
+	$.get("/unknownDest", function(data) {
+		
+		
+		var nbCall = 1;//Math.ceil(data.length / 25);
+		var lastElement = 2;//25;
+		for(i = 0 ; i < nbCall ; i++) {
+			var dest = [];
+			for(j = i*25 ; j < lastElement ; j++) {
+				dest.push(data[j]);
+			}
+			if((lastElement+25) > data.length) {
+				lastElement = data.length;
+			} else {
+				lastElement += 25; 
+			}
+			
+			getDistanceMatrix(dest);
+			
+			/* var html = '<ul>'
+			$.each(dest, function() {
+				html += '<li>'+this+'</li>';
+			});
+			html +=('</ul>');
+			$('#content').append(html).append('<br>'); */	 
+		}
+	});
+});
+
+function getDistanceMatrix(data) {
+	var origin = "Impasse Alice Guy, 31100 Toulouse, France";
+	
+	var service = new google.maps.DistanceMatrixService();
+	service.getDistanceMatrix(
+	  {
+	    origins: [origin],
+	    destinations: data,
+	    travelMode: google.maps.TravelMode.DRIVING,
+	    unitSystem: google.maps.UnitSystem.METRIC,
+	    durationInTraffic: false,
+	    avoidHighways: false,
+	    avoidTolls: false
+	  }, callback);
+}
+
+function callback(response, status) {
+	if (status != google.maps.DistanceMatrixStatus.OK) {
+	    alert('Error was: ' + status);
+	  } else {
+		  $.ajax({
+			    type :  "POST",
+			    dataType: 'json',
+			    contentType : 'application/json; charset=utf-8',
+			    data: JSON.stringify(response),
+			    url  :  "@routes.Application.saveDistance()",
+			        success: function(data){
+			            console.log(data);
+			        }
+			});
+	  }
+	}
+/* 
+function initialize() {
+	var geocoder = new google.maps.Geocoder();
+	geocoder.geocode( { 'address': 'Toulouse, France'}, function(results, status) {
+		if (status == google.maps.GeocoderStatus.OK) {
+			displayMap(results[0].geometry.location);
+		} else {
+			alert('Geocode was not successful for the following reason: ' + status);
+		}
+	});
+}
+  
+function displayMap(centerOfMap) {
+	var mapOptions = {
+      center: centerOfMap,
+      zoom: 8
+    };
+    var map = new google.maps.Map(document.getElementById("map-canvas"),
+        mapOptions);
+}
+
+  google.maps.event.addDomListener(window, 'load', initialize); */
+</script>
+
   </body>
 </html>
