@@ -25,8 +25,8 @@ $(document).ready(function(){
 	$.get("/unknownDest", function(data) {
 		
 		
-		var nbCall = 1;//Math.ceil(data.length / 25);
-		var lastElement = 2;//25;
+		var nbCall = Math.ceil(data.length / 25);
+		var lastElement = 25;
 		for(i = 0 ; i < nbCall ; i++) {
 			var dest = [];
 			for(j = i*25 ; j < lastElement ; j++) {

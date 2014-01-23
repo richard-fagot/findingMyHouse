@@ -60,7 +60,7 @@ public final class LbcReader {
 			String href = link.attr("href");
 			Element date = link.child(0).child(0).child(0);
 			String dateText = date.text();
-			if(!dateText.equalsIgnoreCase("Hiers") && !dateText.equalsIgnoreCase("Aujourd'hui")) {
+			if(!dateText.equalsIgnoreCase("Hier") && !dateText.equalsIgnoreCase("Aujourd'hui")) {
 				isMoreYesterday = false;
 				break;
 			}
