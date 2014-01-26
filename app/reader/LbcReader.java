@@ -10,6 +10,8 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -56,16 +58,32 @@ public final class LbcReader {
 		Element list_lbc = list.get(0);
 		Elements allLinks = list_lbc.getElementsByTag("a");
 		
+		Pattern pattern = Pattern.compile("([\\d ]+)");
+		
 		for(Element link : allLinks) {
 			String href = link.attr("href");
 			Element date = link.child(0).child(0).child(0);
 			String dateText = date.text();
+			// On cherche uniquement les annonces publiées la veille (Hier).
+			// Donc on teste si la date ne vaut plus 'hier'. Mais si il y a eu
+			// des annonces aujourd'hui, il faut ne part en tenir compte.
+			// Normalement, il faudrait echappé les Aujourd'hui.
 			if(!dateText.equalsIgnoreCase("Hier") && !dateText.equalsIgnoreCase("Aujourd'hui")) {
 				isMoreYesterday = false;
 				break;
 			}
 			Date adsDate = parseDate(dateText);
 			String location = link.child(0).child(2).child(2).text().trim().replaceAll("[ \t\r\n]", "").replaceAll("/", ", ");
+			
+			Element titleElt = link.getElementsByClass("title").get(0);
+			Matcher matcher = pattern.matcher(titleElt.text());
+			double surface = 1000000;
+			if(matcher.find()) {
+				String trim = matcher.group(1).replaceAll(" ", "").trim();
+				if(!trim.equals("")) {
+					surface = Double.parseDouble(trim);
+				}
+			}
 			
 			Distance d = new Distance();
 			d.setOrigin("Impasse Alice Guy, Toulouse");
@@ -75,6 +93,7 @@ public final class LbcReader {
 			ads.setUrl(href);
 			ads.setDate(adsDate);
 			ads.setDistance(d);
+			ads.setSurface(surface);
 			
 			res.add(ads);
 		}

@@ -2,8 +2,10 @@ package models;
 
 import java.util.Date;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 
@@ -12,7 +14,10 @@ import play.db.ebean.Model;
 @SuppressWarnings("serial")
 @Entity
 public class SmallAds extends Model {
-
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	Long id;
+	
 	String url;
 	
 	@ManyToOne
@@ -20,6 +25,18 @@ public class SmallAds extends Model {
 	
 	@Transient
 	private Date date;
+	
+	private double surface;
+	
+	private boolean isAccepted;
+
+	public boolean isAccepted() {
+		return isAccepted;
+	}
+
+	public void setAccepted(boolean isAccepted) {
+		this.isAccepted = isAccepted;
+	}
 
 	public String getUrl() {
 		return url;
@@ -47,5 +64,13 @@ public class SmallAds extends Model {
 
 
 	public static Finder<Long, SmallAds> find = new Finder<Long, SmallAds>(Long.class, SmallAds.class);
+
+	public void setSurface(double surface) {
+		this.surface = surface;
+	}
+	
+	public double getSurface() {
+		return this.surface;
+	}
 	
 }

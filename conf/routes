@@ -9,7 +9,12 @@ GET		/elligibleAds				controllers.Application.getElligibleAds()
 
 GET		/unknownDest				controllers.Application.getUnknownDest()
 
-POST		/distance/save				controllers.Application.saveDistance()
+POST	/distance/save				controllers.Application.saveDistance()
+
+GET		/successfullAds				controllers.Application.getSuccessfullAds()
+
+# Javascript routing
+GET    /assets/javascripts/routes      controllers.Application.javascriptRoutes()
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

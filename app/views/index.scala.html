@@ -16,7 +16,7 @@
     <div id="content"/>
     
     
-   
+<script type="text/javascript" src="@routes.Application.javascriptRoutes"></script>
 <script type="text/javascript">
 $(document).ready(function(){
 	var destStr = '[]';
@@ -24,31 +24,49 @@ $(document).ready(function(){
 	
 	$.get("/unknownDest", function(data) {
 		
-		
 		var nbCall = Math.ceil(data.length / 25);
-		var lastElement = 25;
-		for(i = 0 ; i < nbCall ; i++) {
-			var dest = [];
-			for(j = i*25 ; j < lastElement ; j++) {
-				dest.push(data[j]);
-			}
-			if((lastElement+25) > data.length) {
+		
+		if(nbCall != 0) {
+			var lastElement = 25;
+			if(data.length < lastElement) {
 				lastElement = data.length;
-			} else {
-				lastElement += 25; 
 			}
-			
-			getDistanceMatrix(dest);
-			
-			/* var html = '<ul>'
-			$.each(dest, function() {
-				html += '<li>'+this+'</li>';
-			});
-			html +=('</ul>');
-			$('#content').append(html).append('<br>'); */	 
+			for(i = 0 ; i < nbCall ; i++) {
+				var dest = [];
+				for(j = i*25 ; j < lastElement ; j++) {
+					dest.push(data[j]);
+				}
+				if((lastElement+25) > data.length) {
+					lastElement = data.length;
+				} else {
+					lastElement += 25; 
+				}
+				
+				getDistanceMatrix(dest);
+				
+				/* var html = '<ul>'
+				$.each(dest, function() {
+					html += '<li>'+this+'</li>';
+				});
+				html +=('</ul>');
+				$('#content').append(html).append('<br>'); */	 
+			}
+		} else {
+			getAndDisplaySuccessfullAds();
 		}
 	});
 });
+
+function getAndDisplaySuccessfullAds() {
+	jsRoutes.controllers.Application.getSuccessfullAds().ajax({
+        success: function(data) {
+        	displaySelectedAds(data);
+          },
+          error: function() {
+            alert("Error!")
+          }
+        });
+}
 
 function getDistanceMatrix(data) {
 	var origin = "Impasse Alice Guy, 31100 Toulouse, France";
@@ -84,7 +102,12 @@ function callback(response, status) {
 }
 
 function displaySelectedAds(data) {
-	
+	var html = '<ul>'
+	for(i = 0 ; i < data.length ; i++) {
+		html += '<li> <a href="'+data[i].url+'">'+data[i].url+'</a></li>';
+	}
+	html +=('</ul>');
+	$('#content').append(html); 
 }
 /* 
 function initializeMap() {

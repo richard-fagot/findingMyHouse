@@ -21,8 +21,12 @@ create table last_call (
 ;
 
 create table small_ads (
+  id                        bigint auto_increment not null,
   url                       varchar(255),
-  distance_id               bigint)
+  distance_id               bigint,
+  surface                   double,
+  is_accepted               boolean,
+  constraint pk_small_ads primary key (id))
 ;
 
 create sequence last_call_seq;

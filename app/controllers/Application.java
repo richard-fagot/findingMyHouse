@@ -1,11 +1,15 @@
 package controllers;
 
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import models.Distance;
 import models.SmallAds;
+import play.Routes;
 import play.libs.Json;
 import play.mvc.BodyParser;
 import play.mvc.Controller;
@@ -57,6 +61,7 @@ public class Application extends Controller {
 //			"originAddresses":["Impasse Alice Guy, 31300 Toulouse, France"],
 //			"destinationAddresses":["Saint-Clar, France","Galiax, France"]
 //		}
+		Pattern compile = Pattern.compile("(\\D+)");
 		JsonNode json = request().body().asJson();
 		JsonNode dests = json.get("destinationAddresses");
 		for(JsonNode row : json.get("rows")) {
@@ -64,44 +69,98 @@ public class Application extends Controller {
 			for(int i = 0 ; i < dests.size() ; i++) {
 				JsonNode destData = destsData.get(i);
 				String asText = dests.get(i).asText();
-				String city = asText.substring(0, asText.indexOf(","))+", Gers";
-				Distance distance = Distance.find.where().ilike("destination", city+"%").findUnique();
-				distance.setDuration(destData.get("duration").get("value").asDouble());
-				distance.setDistance(destData.get("distance").get("value").asDouble());
-				distance.save();
+				String jsonCity = asText.substring(0, asText.indexOf(","));//+", Gers";
+				Matcher matcher = compile.matcher(jsonCity);
+				if(matcher.find()) {
+					String city = matcher.group(1).trim();
+					Distance distance = Distance.find.where().ilike("destination", city+"%").findUnique();
+					distance.setDuration(destData.get("duration").get("value").asDouble());
+					distance.setDistance(destData.get("distance").get("value").asDouble());
+					distance.save();
+				}
 			}
 		}
-		return ok();
+		return getSuccessfullAds();
+	}
+	
+	public static Result getSuccessfullAds() {
+		double admissibleDuration = 40*60; // more then 40 minutes is rejected
+		double minSurface = 2000; // less than 2000m² is rejected
+		
+		List<SmallAds> res = new LinkedList<SmallAds>();
+		List<SmallAds> all = SmallAds.find.all();
+		for(SmallAds ads : all) {
+			Distance distance = ads.getDistance();
+
+			Double duration = distance.getDuration();
+			if((duration <= admissibleDuration)) {
+				distance.setAllowed(true);
+				distance.save();
+			}
+			
+			double surface = ads.getSurface();
+			if(distance.isAllowed() && (surface >= minSurface)) {
+				ads.setAccepted(true);
+				ads.save();
+			}
+			
+			if(ads.isAccepted()) {
+				res.add(ads);
+			}
+		}
+		return ok(Json.toJson(res));
 	}
 	
 	private static List<SmallAds> retrieveElligibleAds() {
-		if(!hasRetrieved) {
-			String dpt = "gers";
-			
-			LbcReader reader = new LbcReader(dpt);
-			List<SmallAds> adsList = reader.getAds();
-			
-			for(SmallAds ads : adsList) {
-				Distance distance = ads.getDistance();
-				String location = distance.getDestination();
-				Distance existingDistance = Distance.find.where().ieq("destination", location).findUnique();
-				if(existingDistance != null) {
-					if(existingDistance.isAllowed()) {
-						ads.setDistance(existingDistance);
-					} else {
-						continue;
-					}
+		List<SmallAds> all = SmallAds.find.all();
+		for(SmallAds ads : all) {
+			ads.delete();
+		}
+		String dpt = "gers";
+		
+		LbcReader reader = new LbcReader(dpt);
+		List<SmallAds> adsList = reader.getAds();
+		
+		for(SmallAds ads : adsList) {
+			Distance distance = ads.getDistance();
+			String location = distance.getDestination();
+			Distance existingDistance = Distance.find.where().ieq("destination", location).findUnique();
+			if(existingDistance != null) {
+				if(existingDistance.isAllowed()) {
+					ads.setDistance(existingDistance);
 				} else {
-					distance.save();
+					continue;
 				}
-				
-				ads.save();
-				
-				System.out.println(location);
+			} else {
+				distance.save();
 			}
-			hasRetrieved = true;
+			
+			ads.save();
+			
+			System.out.println(location);
+		}
+		hasRetrieved = true;
+		if(!hasRetrieved) {
 		}
 		
 		return SmallAds.find.all();
 	}
+	
+	/**
+	 * Allow to access routes from javascript. Usefull to pass javascript
+	 * parameters to routes.
+	 * 
+	 * https://franzgranlund.wordpress.com/2012/03/29/play-framework-2-0-javascriptrouter-in-java/
+	 * 
+	 * @return
+	 */
+    public static Result javascriptRoutes() {
+        response().setContentType("text/javascript");
+        return ok(
+          Routes.javascriptRouter("jsRoutes",
+            // Routes
+            controllers.routes.javascript.Application.getSuccessfullAds()
+          )
+        );
+      }
 }

@@ -1,3 +1,6 @@
 01-23 09:56:42 jdbc[2]: exception
 org.h2.jdbc.JdbcSQLException: Table "PLAY_EVOLUTIONS" not found; SQL statement:
 select id, hash, apply_script, revert_script, state, last_problem from play_evolutions where state like 'applying_%' [42102-172]
+01-25 23:52:51 jdbc[2]: exception
+org.h2.jdbc.JdbcSQLException: Table "SMALL_ADS" not found; SQL statement:
+select t0.url c0, t0.surface c1, t0.distance_id c2 from small_ads t0 [42102-172]
