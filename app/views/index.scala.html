@@ -1,22 +1,32 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/bootstrap.min.css")">
+    <!-- 
     <style type="text/css">
       html { height: 100% }
       body { height: 100%; margin: 0; padding: 0 }
       #map-canvas { height: 600px; width: 600px; }
     </style>
-    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC3mhgXnJnOiDZMrT_xjDwuM96voi97b3A&sensor=false"></script>
-    <script src="@routes.Assets.at("javascripts/jquery-1.9.0.min.js")" type="text/javascript"></script>
+     -->
   </head>
   
   <body>
-    <div id="map-canvas"/>
-    <div id="content"/>
+    <!-- 
+    <div id="map-canvas"></div>
+     -->
+    <div id="content" class="panel panel-default">
+  		<div class="panel-body">
+	    Basic panel example
+  		</div>
+	</div>
     
-    
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC3mhgXnJnOiDZMrT_xjDwuM96voi97b3A&sensor=false"></script>
 <script type="text/javascript" src="@routes.Application.javascriptRoutes"></script>
+<script src="@routes.Assets.at("javascripts/jquery-1.9.0.min.js")" type="text/javascript"></script>
+<script src="@routes.Assets.at("javascripts/bootstrap.min.js")" type="text/javascript"></script>
+
 <script type="text/javascript">
 $(document).ready(function(){
 	var destStr = '[]';
@@ -24,10 +34,10 @@ $(document).ready(function(){
 	
 	$.get("/unknownDest", function(data) {
 		
-		var nbCall = Math.ceil(data.length / 25);
+		var nbCall = 1;//Math.ceil(data.length / 25);
 		
 		if(nbCall != 0) {
-			var lastElement = 25;
+			var lastElement = 2;//25;
 			if(data.length < lastElement) {
 				lastElement = data.length;
 			}
@@ -42,7 +52,11 @@ $(document).ready(function(){
 					lastElement += 25; 
 				}
 				
-				getDistanceMatrix(dest);
+				if(dest.length != 0) {
+					getDistanceMatrix(dest);
+				} else {
+					getAndDisplaySuccessfullAds();
+				}
 				
 				/* var html = '<ul>'
 				$.each(dest, function() {
@@ -102,11 +116,18 @@ function callback(response, status) {
 }
 
 function displaySelectedAds(data) {
-	var html = '<ul>'
+	var html = '<table class="table">';
+	html += '<theader><tr><th>Surface</th><th>Prix</th><th>Lieu</th></tr></theader>';
+	html += '<tbody>';
 	for(i = 0 ; i < data.length ; i++) {
-		html += '<li> <a href="'+data[i].url+'">'+data[i].url+'</a></li>';
+		html += '<tr>';
+		html += '<td>'+data[i].surface+'</td>';
+		html += '<td>'+data[i].price+'</td>';
+		html += '<td><a href="'+data[i].url+'">'+data[i].distance.destination+'</a></td>';
+		html += '</tr>';
 	}
-	html +=('</ul>');
+	html += '</tbody>';
+	html +='</table>';
 	$('#content').append(html); 
 }
 /* 

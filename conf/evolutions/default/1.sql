@@ -25,6 +25,7 @@ create table small_ads (
   url                       varchar(255),
   distance_id               bigint,
   surface                   double,
+  price                     double,
   is_accepted               boolean,
   constraint pk_small_ads primary key (id))
 ;

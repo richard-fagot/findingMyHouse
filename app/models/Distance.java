@@ -55,6 +55,7 @@ public class Distance extends Model {
 	}
 
 	public Double getDuration() {
+		if(duration == null) return new Double(0);
 		return duration;
 	}
 
@@ -87,8 +88,6 @@ public class Distance extends Model {
 	}
 
 
-
 	public static Finder<Long, Distance> find = new Finder<Long, Distance>(Long.class, Distance.class);
-	
 
 }

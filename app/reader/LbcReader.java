@@ -68,10 +68,18 @@ public final class LbcReader {
 			// Donc on teste si la date ne vaut plus 'hier'. Mais si il y a eu
 			// des annonces aujourd'hui, il faut ne part en tenir compte.
 			// Normalement, il faudrait echappé les Aujourd'hui.
-			if(!dateText.equalsIgnoreCase("Hier") && !dateText.equalsIgnoreCase("Aujourd'hui")) {
+			
+			// Les annonces du jour ne nous interessent pas. On passe donc à
+			// l'élément suivant jusqu'à tomber sur une annonce de la veille.
+			if(dateText.equals("Aujourd'hui")) {
+				continue;
+			}
+			
+			if(!dateText.equalsIgnoreCase("Hier")) {
 				isMoreYesterday = false;
 				break;
 			}
+			
 			Date adsDate = parseDate(dateText);
 			String location = link.child(0).child(2).child(2).text().trim().replaceAll("[ \t\r\n]", "").replaceAll("/", ", ");
 			
@@ -85,15 +93,30 @@ public final class LbcReader {
 				}
 			}
 			
+			
+			Elements priceElt = link.getElementsByClass("price");
+			matcher = pattern.matcher(priceElt.text());
+			double price = 0;
+			if(matcher.find()) {
+				String trim = matcher.group(1).replaceAll(" ", "").trim();
+				if(!trim.equals("")) {
+					price = Double.parseDouble(trim);
+				}
+			}
+			
 			Distance d = new Distance();
 			d.setOrigin("Impasse Alice Guy, Toulouse");
 			d.setDestination(location);
-
+			d.setDistance(new Double(0));
+			d.setDuration(new Double(0));
+			d.setAllowed(true);
+			
 			SmallAds ads = new SmallAds();
 			ads.setUrl(href);
 			ads.setDate(adsDate);
 			ads.setDistance(d);
 			ads.setSurface(surface);
+			ads.setPrice(price);
 			
 			res.add(ads);
 		}

@@ -28,6 +28,8 @@ public class SmallAds extends Model {
 	
 	private double surface;
 	
+	private Double price;
+	
 	private boolean isAccepted;
 
 	public boolean isAccepted() {
@@ -62,9 +64,6 @@ public class SmallAds extends Model {
 		this.date = date;
 	}
 
-
-	public static Finder<Long, SmallAds> find = new Finder<Long, SmallAds>(Long.class, SmallAds.class);
-
 	public void setSurface(double surface) {
 		this.surface = surface;
 	}
@@ -72,5 +71,16 @@ public class SmallAds extends Model {
 	public double getSurface() {
 		return this.surface;
 	}
+	
+	public Double getPrice() {
+		return price;
+	}
+	
+	public void setPrice(Double price) {
+		this.price = price;
+	}
+
+	public static Finder<Long, SmallAds> find = new Finder<Long, SmallAds>(Long.class, SmallAds.class);
+
 	
 }

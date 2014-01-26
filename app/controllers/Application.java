@@ -73,10 +73,15 @@ public class Application extends Controller {
 				Matcher matcher = compile.matcher(jsonCity);
 				if(matcher.find()) {
 					String city = matcher.group(1).trim();
+					// Sometimes, the city returned by google after the
+					// dataMatrix is different from the city recorded in the
+					// database from the reader.
 					Distance distance = Distance.find.where().ilike("destination", city+"%").findUnique();
-					distance.setDuration(destData.get("duration").get("value").asDouble());
-					distance.setDistance(destData.get("distance").get("value").asDouble());
-					distance.save();
+					if(distance != null) {
+						distance.setDuration(destData.get("duration").get("value").asDouble());
+						distance.setDistance(destData.get("distance").get("value").asDouble());
+						distance.save();
+					} 
 				}
 			}
 		}
@@ -84,8 +89,10 @@ public class Application extends Controller {
 	}
 	
 	public static Result getSuccessfullAds() {
-		double admissibleDuration = 40*60; // more then 40 minutes is rejected
+		double maxDuration = 40*60; // more then 40 minutes is rejected
+		double minDuration = 20*60;
 		double minSurface = 2000; // less than 2000m² is rejected
+		double maxPrice = 65000;
 		
 		List<SmallAds> res = new LinkedList<SmallAds>();
 		List<SmallAds> all = SmallAds.find.all();
@@ -93,13 +100,15 @@ public class Application extends Controller {
 			Distance distance = ads.getDistance();
 
 			Double duration = distance.getDuration();
-			if((duration <= admissibleDuration)) {
+			if((duration <= maxDuration) && (duration >= minDuration)) {
 				distance.setAllowed(true);
-				distance.save();
+			} else {
+				distance.setAllowed(false);
 			}
+			distance.save();
 			
 			double surface = ads.getSurface();
-			if(distance.isAllowed() && (surface >= minSurface)) {
+			if(distance.isAllowed() && (surface >= minSurface) && (ads.getPrice() <= maxPrice)) {
 				ads.setAccepted(true);
 				ads.save();
 			}
@@ -116,29 +125,44 @@ public class Application extends Controller {
 		for(SmallAds ads : all) {
 			ads.delete();
 		}
-		String dpt = "gers";
 		
-		LbcReader reader = new LbcReader(dpt);
-		List<SmallAds> adsList = reader.getAds();
+		String[] dpts = {"gers", "haute_garonne"};
 		
-		for(SmallAds ads : adsList) {
-			Distance distance = ads.getDistance();
-			String location = distance.getDestination();
-			Distance existingDistance = Distance.find.where().ieq("destination", location).findUnique();
-			if(existingDistance != null) {
-				if(existingDistance.isAllowed()) {
+		for(String dpt : dpts) {
+			LbcReader reader = new LbcReader(dpt);
+			// the reader returns non persisted ads
+			List<SmallAds> adsList = reader.getAds();
+			
+			for(SmallAds ads : adsList) {
+				// The distance is not persisted when returned from the reader
+				// and isAllowed return true (set by the reader).
+				Distance distance = ads.getDistance();
+				String location = distance.getDestination();
+				// Check if this destination already exists in the database. If
+				// yes, we swap both distances.
+				Distance existingDistance = Distance.find.where().ieq("destination", location).findUnique();
+				if(existingDistance != null) {
+					distance = existingDistance;
 					ads.setDistance(existingDistance);
+				} else {
+					distance.save();
+				}
+				
+				// At this step, the distance is the one returned by the reader,
+				// returning isAllowed:true as we have not computed the
+				// distance. Or true or false if it has been retrieved from the
+				// database. The ads is selected for the rest of the process
+				// only if the distance is allowed.
+				if(distance.isAllowed()) {
+					ads.save();
 				} else {
 					continue;
 				}
-			} else {
-				distance.save();
+				
+				System.out.println(location);
 			}
-			
-			ads.save();
-			
-			System.out.println(location);
 		}
+		
 		hasRetrieved = true;
 		if(!hasRetrieved) {
 		}

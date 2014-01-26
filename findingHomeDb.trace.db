@@ -4,3 +4,24 @@ select id, hash, apply_script, revert_script, state, last_problem from play_evol
 01-25 23:52:51 jdbc[2]: exception
 org.h2.jdbc.JdbcSQLException: Table "SMALL_ADS" not found; SQL statement:
 select t0.url c0, t0.surface c1, t0.distance_id c2 from small_ads t0 [42102-172]
+01-26 19:46:39 jdbc[2]: exception
+org.h2.jdbc.JdbcSQLException: Column "TOTO" not found; SQL statement:
+script to toto [42122-172]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:329)
+	at org.h2.message.DbException.get(DbException.java:169)
+	at org.h2.message.DbException.get(DbException.java:146)
+	at org.h2.expression.ExpressionColumn.optimize(ExpressionColumn.java:144)
+	at org.h2.command.dml.ScriptBase.getFileName(ScriptBase.java:90)
+	at org.h2.command.dml.ScriptBase.deleteStore(ScriptBase.java:108)
+	at org.h2.command.dml.ScriptCommand.query(ScriptCommand.java:155)
+	at org.h2.command.CommandContainer.query(CommandContainer.java:91)
+	at org.h2.command.Command.executeQuery(Command.java:195)
+	at org.h2.jdbc.JdbcStatement.executeInternal(JdbcStatement.java:176)
+	at org.h2.jdbc.JdbcStatement.execute(JdbcStatement.java:155)
+	at org.h2.server.web.WebApp.getResult(WebApp.java:1316)
+	at org.h2.server.web.WebApp.query(WebApp.java:1005)
+	at org.h2.server.web.WebApp$1.next(WebApp.java:967)
+	at org.h2.server.web.WebApp$1.next(WebApp.java:954)
+	at org.h2.server.web.WebThread.process(WebThread.java:167)
+	at org.h2.server.web.WebThread.run(WebThread.java:94)
+	at java.lang.Thread.run(Unknown Source)
