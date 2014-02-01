@@ -31,6 +31,8 @@ public class SmallAds extends Model {
 	private Double price;
 	
 	private boolean isAccepted;
+	
+	private String smallAdsSite;
 
 	public boolean isAccepted() {
 		return isAccepted;
@@ -80,6 +82,26 @@ public class SmallAds extends Model {
 		this.price = price;
 	}
 
+	public String getSmallAdsSite() {
+		return smallAdsSite;
+	}
+
+	public void setSmallAdsSite(String smallAdsSite) {
+		this.smallAdsSite = smallAdsSite;
+	}
+
+	public String getDurationString() {
+		Double duration = this.distance.getDuration();
+		int hours = (int) (duration / 3600);
+		int minutes = (int)((duration - (hours*3600))/60);
+		
+		if(hours == 0) {
+			return "" + minutes + " min.";
+		} else {
+			return "" + hours + "h" + minutes;
+		}
+	}
+	
 	public static Finder<Long, SmallAds> find = new Finder<Long, SmallAds>(Long.class, SmallAds.class);
 
 	

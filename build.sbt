@@ -7,7 +7,7 @@ libraryDependencies ++= Seq(
   javaEbean,
   cache,
   "org.jsoup" % "jsoup" % "1.7.3",
-  "com.graphhopper" % "graphhopper" % "0.2"
+  "org.json" % "json" % "20131018"
 )     
 
 play.Project.playJavaSettings

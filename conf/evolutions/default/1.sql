@@ -12,6 +12,7 @@ create table distance (
   lon                       double,
   lat                       double,
   is_allowed                boolean,
+  constraint uq_distance_1 unique (origin,destination),
   constraint pk_distance primary key (id))
 ;
 
@@ -27,6 +28,7 @@ create table small_ads (
   surface                   double,
   price                     double,
   is_accepted               boolean,
+  small_ads_site            varchar(255),
   constraint pk_small_ads primary key (id))
 ;
 

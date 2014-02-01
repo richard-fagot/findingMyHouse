@@ -4,15 +4,22 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import play.db.ebean.Model;
 
 @SuppressWarnings("serial")
+@Table(
+	    uniqueConstraints=
+	        @UniqueConstraint(columnNames={"origin", "destination"})
+	)
 @Entity
 public class Distance extends Model {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+	
 	private String origin;
 	private String destination;
 	private Double distance;

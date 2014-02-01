@@ -5,6 +5,8 @@
 # Home page
 GET     /                           controllers.Application.index()
 
+GET		/ads						controllers.Application.getAds()
+
 GET		/elligibleAds				controllers.Application.getElligibleAds()
 
 GET		/unknownDest				controllers.Application.getUnknownDest()

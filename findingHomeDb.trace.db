@@ -25,3 +25,15 @@ script to toto [42122-172]
 	at org.h2.server.web.WebThread.process(WebThread.java:167)
 	at org.h2.server.web.WebThread.run(WebThread.java:94)
 	at java.lang.Thread.run(Unknown Source)
+01-31 23:10:59 jdbc[2]: exception
+org.h2.jdbc.JdbcSQLException: Syntax error in SQL statement "DELETE *[*] FROM DISTANCE WHERE DURATION IS NULL "; expected "identifier"; SQL statement:
+delete * from distance where duration is null [42001-172]
+01-31 23:11:05 jdbc[2]: exception
+org.h2.jdbc.JdbcSQLException: Syntax error in SQL statement "DELETE *[*] FROM DISTANCE WHERE DURATION ISNULL "; expected "identifier"; SQL statement:
+delete * from distance where duration isnull [42001-172]
+01-31 23:11:21 jdbc[2]: exception
+org.h2.jdbc.JdbcSQLException: Syntax error in SQL statement "DELETE *[*] FROM DISTANCE WHERE DURATION = NULL "; expected "identifier"; SQL statement:
+delete * from distance where duration = null [42001-172]
+01-31 23:12:57 jdbc[2]: exception
+org.h2.jdbc.JdbcSQLException: Syntax error in SQL statement "DELETE FROM DISTANCE WHERE DURATION[*] == NULL "; SQL statement:
+delete from distance where duration == null [42000-172]

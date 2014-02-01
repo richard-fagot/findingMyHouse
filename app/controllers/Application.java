@@ -9,18 +9,22 @@ import java.util.regex.Pattern;
 
 import models.Distance;
 import models.SmallAds;
+import play.Logger;
+import play.Logger.ALogger;
 import play.Routes;
 import play.libs.Json;
 import play.mvc.BodyParser;
 import play.mvc.Controller;
 import play.mvc.Result;
 import reader.LbcReader;
-import views.html.index;
+import reader.SeLogerReader;
+import views.html.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 public class Application extends Controller {
 	private static boolean hasRetrieved = false;
+	private static ALogger logger = Logger.of(Application.class);
 	
 	public static Result index() {
 		return ok(index.render());
@@ -36,13 +40,45 @@ public class Application extends Controller {
 		
 		for(SmallAds ads : all) {
 			Distance distance = ads.getDistance();
-			if(distance.getDuration() == null) {
+			if(distance.getDuration() == 0) {
 				String destination = distance.getDestination();
 				unknownDest.add(destination);
 			}
 		}
 		
 		return ok(Json.toJson(unknownDest));
+	}
+	
+	public static Result getAds() {
+		int[] dpts = {31,32};
+		int maxPrice = 65000;
+		int minSurface = 2000;
+		int maxDuration = 40*60;
+		
+		List<SmallAds> allAds = new LinkedList<>();
+		
+		for(int dpt : dpts) {
+			LbcReader lbcr = new LbcReader(dpt);
+			allAds.addAll(lbcr.getAds(minSurface, maxPrice));
+			
+			SeLogerReader slr = new SeLogerReader(dpt);
+			allAds.addAll(slr.getAds(minSurface, maxPrice));
+		}
+		
+		List<SmallAds> finalAds = new LinkedList<>();
+		for(SmallAds ads : allAds) {
+			Distance distance = ads.getDistance();
+			if(distance == null) {
+				finalAds.add(ads);
+			} else {
+				Double duration = distance.getDuration();
+				if(duration == null || duration <= maxDuration) {
+					finalAds.add(ads);
+				}
+			}
+		}
+		
+		return ok(ads.render(finalAds));
 	}
 	
 	@BodyParser.Of(BodyParser.Json.class)
@@ -68,20 +104,23 @@ public class Application extends Controller {
 			JsonNode destsData = row.get("elements");
 			for(int i = 0 ; i < dests.size() ; i++) {
 				JsonNode destData = destsData.get(i);
-				String asText = dests.get(i).asText();
-				String jsonCity = asText.substring(0, asText.indexOf(","));//+", Gers";
-				Matcher matcher = compile.matcher(jsonCity);
-				if(matcher.find()) {
-					String city = matcher.group(1).trim();
-					// Sometimes, the city returned by google after the
-					// dataMatrix is different from the city recorded in the
-					// database from the reader.
-					Distance distance = Distance.find.where().ilike("destination", city+"%").findUnique();
-					if(distance != null) {
-						distance.setDuration(destData.get("duration").get("value").asDouble());
-						distance.setDistance(destData.get("distance").get("value").asDouble());
-						distance.save();
-					} 
+				if(!destData.get("status").asText().equals("NOT_FOUND")) {
+					String asText = dests.get(i).asText();
+					
+					String jsonCity = asText.substring(0, asText.indexOf(","));//+", Gers";
+					Matcher matcher = compile.matcher(jsonCity);
+					if(matcher.find()) {
+						String city = matcher.group(1).trim();
+						// Sometimes, the city returned by google after the
+						// dataMatrix is different from the city recorded in the
+						// database from the reader.
+						Distance distance = Distance.find.where().ilike("destination", city+"%").findUnique();
+						if(distance != null) {
+							distance.setDuration(destData.get("duration").get("value").asDouble());
+							distance.setDistance(destData.get("distance").get("value").asDouble());
+							distance.save();
+						} 
+					}
 				}
 			}
 		}
@@ -108,7 +147,7 @@ public class Application extends Controller {
 			distance.save();
 			
 			double surface = ads.getSurface();
-			if(distance.isAllowed() && (surface >= minSurface) && (ads.getPrice() <= maxPrice)) {
+			if(distance.isAllowed() && ((surface < 0 ) || ((surface >= minSurface) && (ads.getPrice() <= maxPrice)))) {
 				ads.setAccepted(true);
 				ads.save();
 			}
@@ -126,12 +165,21 @@ public class Application extends Controller {
 			ads.delete();
 		}
 		
-		String[] dpts = {"gers", "haute_garonne"};
+		int[] dpts = {31, 32};
 		
-		for(String dpt : dpts) {
+		for(int dpt : dpts) {
+			List<SmallAds> adsList = new LinkedList<>();
+			
 			LbcReader reader = new LbcReader(dpt);
 			// the reader returns non persisted ads
-			List<SmallAds> adsList = reader.getAds();
+			adsList = reader.getAds(2000, 65000);
+			logger.info("Found in lbc : "+adsList.size());
+			
+			SeLogerReader slr = new SeLogerReader(dpt);
+			List<SmallAds> slrAds = slr.getAds(2000, 65000);
+			logger.info("Found in seloger : " + slrAds.size());
+			
+			adsList.addAll(slrAds);
 			
 			for(SmallAds ads : adsList) {
 				// The distance is not persisted when returned from the reader
@@ -153,7 +201,7 @@ public class Application extends Controller {
 				// distance. Or true or false if it has been retrieved from the
 				// database. The ads is selected for the rest of the process
 				// only if the distance is allowed.
-				if(distance.isAllowed()) {
+				if(distance.isAllowed() || (distance.getDistance() != null && distance.getDistance().equals(0))) {
 					ads.save();
 				} else {
 					continue;

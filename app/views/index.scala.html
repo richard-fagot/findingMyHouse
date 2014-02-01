@@ -34,10 +34,10 @@ $(document).ready(function(){
 	
 	$.get("/unknownDest", function(data) {
 		
-		var nbCall = 1;//Math.ceil(data.length / 25);
+		var nbCall = Math.ceil(data.length / 25);
 		
 		if(nbCall != 0) {
-			var lastElement = 2;//25;
+			var lastElement = 25;
 			if(data.length < lastElement) {
 				lastElement = data.length;
 			}
@@ -117,13 +117,22 @@ function callback(response, status) {
 
 function displaySelectedAds(data) {
 	var html = '<table class="table">';
-	html += '<theader><tr><th>Surface</th><th>Prix</th><th>Lieu</th></tr></theader>';
+	html += '<theader><tr><th>Dur&eacute;e</th><th>Surface</th><th>Prix</th><th>Lieu</th><th>Trouv&eacute;e sur</th></tr></theader>';
 	html += '<tbody>';
 	for(i = 0 ; i < data.length ; i++) {
+		var inSeconds = data[i].distance.duration;
+		var hours = parseInt( inSeconds / 3600);
+		var minutes = parseInt(((inSeconds / 3600 ) - hours)*60); 
+		var surface = data[i].surface;
+		if(surface < 0) {
+			surface = '-';
+		}
 		html += '<tr>';
-		html += '<td>'+data[i].surface+'</td>';
+		html += '<td>'+ hours + 'h' + minutes +'</td>';
+		html += '<td>'+ surface +'</td>';
 		html += '<td>'+data[i].price+'</td>';
 		html += '<td><a href="'+data[i].url+'">'+data[i].distance.destination+'</a></td>';
+		html += '<td>'+ data[i].smallAdsSite +'</td>';
 		html += '</tr>';
 	}
 	html += '</tbody>';

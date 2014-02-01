@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
+
 import org.junit.*;
 
 import play.mvc.*;
@@ -14,7 +15,7 @@ import play.data.validation.Constraints.RequiredValidator;
 import play.i18n.Lang;
 import play.libs.F;
 import play.libs.F.*;
-
+import reader.SeLogerReader;
 import static play.test.Helpers.*;
 import static org.fest.assertions.Assertions.*;
 
@@ -38,6 +39,12 @@ public class ApplicationTest {
 //        Content html = views.html.index.render("Your new application is ready.");
 //        assertThat(contentType(html)).isEqualTo("text/html");
 //        assertThat(contentAsString(html)).contains("Your new application is ready.");
+    }
+    
+    @Test
+    public void SeLogerReaderTest() {
+    	SeLogerReader slr = new SeLogerReader(32);
+    	slr.getAds(2000, 65000);
     }
 
 

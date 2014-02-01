@@ -18,28 +18,30 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import tools.DistanceTools;
 import models.Distance;
 import models.SmallAds;
 
 public final class LbcReader {
+	private static String SMALL_ADS_SITE = "leboncoin";
 	private static String ROOT_URL = "http://www.leboncoin.fr/ventes_immobilieres/offres/midi_pyrenees";
-	private String dpt;
+	private int dpt;
 	
 	private static final String PAGE = "o=";
 	private static final String IMMO = "ret=3";
 	
 	private SimpleDateFormat sdf = new SimpleDateFormat("d MMM", Locale.FRANCE);
 	
-	public LbcReader(String dpt) {
+	public LbcReader(int dpt) {
 		this.dpt = dpt;
 	}
 	
-	public List<SmallAds> getAds() {
+	public List<SmallAds> getAds(int minSurface, int maxPrice) {
 		List<SmallAds> res = new LinkedList<SmallAds>();
 
 		int page = 1;
 		try {
-			while(hasYesterDayAds(res, page)) {
+			while(hasYesterDayAds(res, page, minSurface, maxPrice)) {
 				page++;
 			}
 		} catch (Exception e) {
@@ -49,9 +51,9 @@ public final class LbcReader {
 		return res;
 	}
 	
-	private boolean hasYesterDayAds(List<SmallAds> res, int page) throws MalformedURLException, IOException {
+	private boolean hasYesterDayAds(List<SmallAds> res, int page, int minSurface, int maxPrice) throws MalformedURLException, IOException {
 		boolean isMoreYesterday = true;
-		String url = ROOT_URL+"/"+dpt+"/?"+IMMO+"&"+PAGE+page;
+		String url = ROOT_URL+"/"+getDpt(this.dpt)+"/?"+IMMO+"&"+PAGE+page;
 		
 		Document doc = Jsoup.parse(new URL(url).openStream(), "iso-8859-15", url);
 		Elements list = doc.getElementsByClass("list-lbc");
@@ -82,10 +84,16 @@ public final class LbcReader {
 			
 			Date adsDate = parseDate(dateText);
 			String location = link.child(0).child(2).child(2).text().trim().replaceAll("[ \t\r\n]", "").replaceAll("/", ", ");
+			location = location.replaceAll("[\\d]", "").trim();
+			// Supprime le nom du département de la destination pour éviter les doublons en base.
+			int indexOf = location.indexOf(",");
+			if(indexOf > 0) {
+				location = location.substring(0, indexOf);
+			}
 			
 			Element titleElt = link.getElementsByClass("title").get(0);
 			Matcher matcher = pattern.matcher(titleElt.text());
-			double surface = 1000000;
+			double surface = -1;
 			if(matcher.find()) {
 				String trim = matcher.group(1).replaceAll(" ", "").trim();
 				if(!trim.equals("")) {
@@ -93,6 +101,9 @@ public final class LbcReader {
 				}
 			}
 			
+			if(surface != -1 && surface < minSurface) {
+				continue;
+			}
 			
 			Elements priceElt = link.getElementsByClass("price");
 			matcher = pattern.matcher(priceElt.text());
@@ -104,14 +115,22 @@ public final class LbcReader {
 				}
 			}
 			
-			Distance d = new Distance();
-			d.setOrigin("Impasse Alice Guy, Toulouse");
-			d.setDestination(location);
-			d.setDistance(new Double(0));
-			d.setDuration(new Double(0));
-			d.setAllowed(true);
+			if(price > maxPrice) {
+				continue;
+			}
+			
+			
+//			Distance d = new Distance();
+//			d.setOrigin("Impasse Alice Guy, Toulouse");
+//			d.setDestination(location);
+//			d.setDistance(new Double(0));
+//			d.setDuration(new Double(0));
+//			d.setAllowed(true);
+			
+			Distance d = DistanceTools.getDistance("Impasse Alice Guy Toulouse", location);
 			
 			SmallAds ads = new SmallAds();
+			ads.setSmallAdsSite(SMALL_ADS_SITE);
 			ads.setUrl(href);
 			ads.setDate(adsDate);
 			ads.setDistance(d);
@@ -143,5 +162,18 @@ public final class LbcReader {
 		}
 		
 		return null;
+	}
+	
+	private String getDpt(int dpt) {
+		switch (this.dpt) {
+		case 31:
+			return "haute_garonne";
+		case 32:
+			return "gers";
+		default:
+			return "";
+		}
+		
+		
 	}
 }
